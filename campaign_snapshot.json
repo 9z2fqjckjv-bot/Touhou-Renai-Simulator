@@ -1,0 +1,301 @@
+{
+  "ok": true,
+  "campaign_id": "touhou_renai_launch_2026",
+  "title": "『東方Project恋愛シミュレーター』本格稼働 実費分担サポーター＆先行デポジット／ボイスパス受付",
+  "subtitle": "AquesTalk1ライセンス初年度確定見積（税込¥157,300）＋ 自宅Linuxサーバー運転費・Gemini API実費の透明分担システム（利益0円上限ストッパー実装）",
+  "organizer": {
+    "type": "個人開発（同人サークル・ファン活動／非営利実費回収）",
+    "handle": "zuyasi",
+    "contact_email": "japan.saitama.nanndemoya@gmail.com"
+  },
+  "guideline_compliance": {
+    "statement": "本プロジェクトは上海アリス幻樂団様の『東方Project』二次創作ガイドラインを遵守し、個人開発（同人サークル活動）名義で運営する非営利の実費分担プロジェクトです。営利目的のクラウドファンディングではなく、AquesTalk1ライセンス実費（初年度税込¥157,300／2年目以降¥107,800）およびGemini API・自宅サーバー運転実費の共同分担・先行デポジット購入として運用し、固定費100%到達時点で自動徴収停止＆全ユーザーへフルボイスを無料開放します。",
+    "client_free_note": "クライアント本体（macOS / Linux / Windows 対応・Python標準ライブラリのみで動作）はGitHub上で完全無償配布しています。ご自身のGemini APIキー指定モード＋ボイスOFF（または初回5セリフ無料枠）なら ¥0 でプレイ可能です。"
+  },
+  "aquestalk_quote": {
+    "confirmed_date": "2026-11-23",
+    "vendor": "株式会社アクエスト",
+    "items": [
+      {
+        "id": "aq1_linux_dev",
+        "name": "AquesTalk1 Linux 開発ライセンス",
+        "category": "イニシャル費用（初回のみ・買い切り）",
+        "price_ex_tax": 45000,
+        "price_inc_tax": 49500
+      },
+      {
+        "id": "aq1_server_annual",
+        "name": "AquesTalk1 使用ライセンス(サーバー版)",
+        "category": "ランニング費用（物理1台・2コア／1年毎更新）",
+        "price_ex_tax": 98000,
+        "price_inc_tax": 107800
+      }
+    ],
+    "year1_total_ex_tax": 143000,
+    "year1_total_inc_tax": 157300,
+    "year2_total_ex_tax": 98000,
+    "year2_total_inc_tax": 107800
+  },
+  "period_key": "year_1",
+  "voice_pool": {
+    "period_key": "year_1",
+    "target_yen": 157300,
+    "collected_yen": 0,
+    "remaining_yen": 157300,
+    "progress_pct": 0.0,
+    "is_goal_reached": false
+  },
+  "ops_fund_collected_yen": 0,
+  "supporters_count": 0,
+  "buckets": [
+    {
+      "id": "aquestalk_dev_init",
+      "label": "① AquesTalk1 Linux 開発ライセンス（初回買い切り・税込）",
+      "description": "株式会社アクエスト公式見積確定（¥45,000税別／¥49,500税込）。初回のみのイニシャル費用です。",
+      "target_yen": 49500,
+      "collected_yen": 0,
+      "remaining_yen": 49500,
+      "progress_pct": 0.0,
+      "cap_strict": true,
+      "is_reached": false
+    },
+    {
+      "id": "aquestalk_server_annual",
+      "label": "② AquesTalk1 使用ライセンス・サーバー版（初年度年額・税込）",
+      "description": "自宅Mac mini Debian 13サーバー（物理1台・2コア）の年間使用ライセンス（¥98,000税別／¥107,800税込）。①＋②合計¥157,300到達で全員へフルボイスを無料開放します。",
+      "target_yen": 107800,
+      "collected_yen": 0,
+      "remaining_yen": 107800,
+      "progress_pct": 0.0,
+      "cap_strict": true,
+      "is_reached": false
+    },
+    {
+      "id": "gemini_and_server_ops",
+      "label": "③ Gemini API 対話・背景生成 ＆ 自宅サーバー運転実費プール（変動費）",
+      "description": "プロンプト購入（10p:¥100〜10,000p:¥5,000）およびデポジット残高として預かり、Gemini 2.5 Flash 対話生成・AI背景生成（1枚¥100）・サーバー電力実費に充当される原資累計です。",
+      "target_yen": 0,
+      "collected_yen": 0,
+      "remaining_yen": 0,
+      "progress_pct": 0.0,
+      "cap_strict": false,
+      "is_reached": false
+    }
+  ],
+  "deposit_products": [
+    {
+      "sku": "THRENAI-DEPOSIT-500",
+      "gross_yen": 500,
+      "fee_yen": 58,
+      "net_yen": 442,
+      "badge": "気軽にお試し",
+      "recommended_combo": {
+        "voice_plan_id": "vt_100",
+        "prompt_plan_id": "p20"
+      }
+    },
+    {
+      "sku": "THRENAI-DEPOSIT-1000",
+      "gross_yen": 1000,
+      "fee_yen": 76,
+      "net_yen": 924,
+      "badge": "定番エントリー",
+      "recommended_combo": {
+        "voice_plan_id": "vp_30d",
+        "prompt_plan_id": "p50"
+      }
+    },
+    {
+      "sku": "THRENAI-DEPOSIT-2000",
+      "gross_yen": 2000,
+      "fee_yen": 112,
+      "net_yen": 1888,
+      "badge": "一番人気",
+      "recommended": true,
+      "recommended_combo": {
+        "voice_plan_id": "vp_30d",
+        "prompt_plan_id": "p500"
+      }
+    },
+    {
+      "sku": "THRENAI-DEPOSIT-3000",
+      "gross_yen": 3000,
+      "fee_yen": 148,
+      "net_yen": 2852,
+      "badge": "1年パス推奨",
+      "recommended_combo": {
+        "voice_plan_id": "vp_365d",
+        "prompt_plan_id": "p500"
+      }
+    },
+    {
+      "sku": "THRENAI-DEPOSIT-5000",
+      "gross_yen": 5000,
+      "fee_yen": 220,
+      "net_yen": 4780,
+      "badge": "本格稼働サポーター",
+      "recommended_combo": {
+        "voice_plan_id": "vp_365d",
+        "prompt_plan_id": "p2000"
+      }
+    },
+    {
+      "sku": "THRENAI-DEPOSIT-10000",
+      "gross_yen": 10000,
+      "fee_yen": 400,
+      "net_yen": 9600,
+      "badge": "初年度ライセンス大口分担",
+      "recommended_combo": {
+        "voice_plan_id": "vp_365d",
+        "prompt_plan_id": "p10000"
+      }
+    }
+  ],
+  "voice_products": [
+    {
+      "sku": "THRENAI-VOICE-TICKET-100",
+      "voice_plan_id": "vt_100",
+      "name": "AquesTalk1 ボイス100セリフ枠",
+      "price_yen": 100,
+      "days": 0,
+      "credits": 100,
+      "desc": "使った分だけ1枠消費・有効期限なし（APIキー指定派のお試しにも最適）"
+    },
+    {
+      "sku": "THRENAI-VOICE-PASS-30D",
+      "voice_plan_id": "vp_30d",
+      "name": "AquesTalk1 30日間フルボイスパス",
+      "price_yen": 200,
+      "days": 30,
+      "credits": 0,
+      "recommended": true,
+      "desc": "30日間セリフ回数無制限でフルボイス再生（利益ゼロ上限ストッパー連動）"
+    },
+    {
+      "sku": "THRENAI-VOICE-TICKET-300",
+      "voice_plan_id": "vt_300",
+      "name": "AquesTalk1 ボイス300セリフ枠",
+      "price_yen": 250,
+      "days": 0,
+      "credits": 300,
+      "desc": "まとめ買いでお得な従量300セリフ再生枠・有効期限なし"
+    },
+    {
+      "sku": "THRENAI-VOICE-PASS-365D",
+      "voice_plan_id": "vp_365d",
+      "name": "AquesTalk1 1年間フルボイスパス",
+      "price_yen": 1200,
+      "days": 365,
+      "credits": 0,
+      "desc": "365日間回数無制限（年間サーバーライセンス維持費の約90分の1を分担）"
+    }
+  ],
+  "prompt_plans": [
+    {
+      "id": "p10",
+      "prompts": 10,
+      "price_yen": 100,
+      "unit_yen": 10.0,
+      "monthly_limit": null,
+      "page": 1,
+      "tagline": "お試し利用に最適"
+    },
+    {
+      "id": "p20",
+      "prompts": 20,
+      "price_yen": 200,
+      "unit_yen": 10.0,
+      "monthly_limit": null,
+      "page": 1,
+      "tagline": "短時間利用なら"
+    },
+    {
+      "id": "p50",
+      "prompts": 50,
+      "price_yen": 400,
+      "unit_yen": 8.0,
+      "monthly_limit": null,
+      "page": 1,
+      "tagline": "10prompt分お得"
+    },
+    {
+      "id": "p100",
+      "prompts": 100,
+      "price_yen": 800,
+      "unit_yen": 8.0,
+      "monthly_limit": null,
+      "page": 1,
+      "tagline": "ボリューミー"
+    },
+    {
+      "id": "p200",
+      "prompts": 200,
+      "price_yen": 1200,
+      "unit_yen": 6.0,
+      "monthly_limit": null,
+      "page": 2,
+      "tagline": "さらにコスパアップ"
+    },
+    {
+      "id": "p500",
+      "prompts": 500,
+      "price_yen": 1500,
+      "unit_yen": 3.0,
+      "monthly_limit": null,
+      "page": 2,
+      "tagline": "一番人気の高コスパ"
+    },
+    {
+      "id": "p1000",
+      "prompts": 1000,
+      "price_yen": 2000,
+      "unit_yen": 2.0,
+      "monthly_limit": 3,
+      "page": 2,
+      "tagline": "毎日たっぷり話せる"
+    },
+    {
+      "id": "p2000",
+      "prompts": 2000,
+      "price_yen": 3000,
+      "unit_yen": 1.5,
+      "monthly_limit": 2,
+      "page": 2,
+      "tagline": "長期間の相棒に"
+    },
+    {
+      "id": "p5000",
+      "prompts": 5000,
+      "price_yen": 4000,
+      "unit_yen": 0.8,
+      "monthly_limit": 1,
+      "page": 3,
+      "tagline": "限界突破の大容量"
+    },
+    {
+      "id": "p10000",
+      "prompts": 10000,
+      "price_yen": 5000,
+      "unit_yen": 0.5,
+      "monthly_limit": 1,
+      "page": 3,
+      "tagline": "最安値・究極のまとめ買い"
+    }
+  ],
+  "downloads": {
+    "all_os_zip_url": "https://raw.githubusercontent.com/9z2fqjckjv-bot/Toho-Studio/main/TouhouRenaiSimulator/packages/TouhouRenaiSimulator-ReadyToRun-AllOS.zip",
+    "repo_url": "https://github.com/9z2fqjckjv-bot/Toho-Studio/tree/main/TouhouRenaiSimulator"
+  },
+  "recent_supporters": [],
+  "paypal": {
+    "app_name": "Gemini",
+    "app_id": "APP-8T9206335D6788228",
+    "mode": "live",
+    "js_client_id": "BAABOchPXFZ_hmmE7bqLSpE6fBC0pzsHv9Qndt8hSS-4L5F25woNtP_9tGlTbJaujv7cJ-hPp8eqEevXZk",
+    "rest_ready": false,
+    "currency": "JPY",
+    "fee_rate": 0.036,
+    "fee_fixed_yen": 40
+  },
+  "updated_at": "2026-11-25T13:02:14+00:00"
+}

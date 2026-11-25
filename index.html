@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>東方Project恋愛シミュレーター｜実費分担サポーター＆先行デポジット・フルボイスパス受付</title>
+  <meta name="description" content="140キャラ声種×50種性格変化×立ち絵色変え搭載『東方Project恋愛シミュレーター』本格稼働に向けた、AquesTalk1ライセンス実費（初年度税込¥157,300）・自宅Linuxサーバー運転費・Gemini API実費の透明分担ポータル（利益0円上限ストッパー付・クライアント無償配布）。">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="site-header">
+    <div class="container header-inner">
+      <a href="#" class="brand">
+        <span class="brand-mark">🌸</span>
+        <span>東方Project恋愛シミュレーター</span>
+      </a>
+      <nav class="nav-links">
+        <a href="#overview">作品仕様</a>
+        <a href="#cost-breakdown">確定見積・実費内訳</a>
+        <a href="#support-packs">PayPal先行購入・分担</a>
+        <a href="#pricing-reference">料金表一覧</a>
+        <a href="#download">無料DL・引換手順</a>
+        <a href="#guidelines">ガイドライン・表記</a>
+        <a href="#support-packs" class="nav-cta">実費分担に参加する</a>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <!-- Hero -->
+    <section class="hero">
+      <div class="container hero-grid">
+        <div>
+          <div class="pill-row">
+            <span class="badge-pill accent">東方Project 二次創作同人作品（個人開発）</span>
+            <span class="badge-pill zero-profit">🛡️ 利益0円上限ストッパー実装</span>
+            <span class="badge-pill">💻 Mac / Linux / Windows 本体無償配布</span>
+          </div>
+
+          <h1 id="hero-title" class="hero-title">
+            『東方Project恋愛シミュレーター』本格稼働<br>実費分担サポーター＆先行デポジット／ボイスパス受付
+          </h1>
+          <p id="hero-subtitle" class="hero-sub">
+            AquesTalk1ライセンス初年度確定見積（税込¥157,300）および自宅Linuxサーバー運転費・Gemini API従量実費を透明に分担回収し、固定費100%到達後はフルボイスを全プレイヤーへ自動無料開放します。
+          </p>
+
+          <div id="guideline-statement" class="guideline-box">
+            本プロジェクトは上海アリス幻樂団様の『東方Project』二次創作ガイドラインを遵守し、個人開発（同人ファン活動）名義で運営する非営利の実費分担プロジェクトです。クライアント本体は無償配布しており、ご自身のGemini APIキー＋ボイスOFF（または初回5セリフ無料枠）なら完全無料（¥0）で遊べます。
+          </div>
+
+          <div class="hero-actions">
+            <a href="#support-packs" class="btn btn-primary">🎙️ 先行デポジット・ボイスパスを選ぶ</a>
+            <a id="btn-hero-download" href="#download" class="btn btn-secondary">📥 クライアント本体を無料DL</a>
+          </div>
+        </div>
+
+        <!-- Live AquesTalk1 & Ops Recovery Meter Card -->
+        <aside class="meter-card" aria-label="AquesTalk1ライセンス実費回収メーター">
+          <div class="meter-status-line">
+            <span id="server-sync-badge" class="live-dot">サーバー同期確認中…</span>
+            <span id="meter-period-label">初年度固定費プール (year_1)</span>
+          </div>
+
+          <div style="font-size:0.8rem;color:var(--sakura);font-weight:700;margin-bottom:2px">
+            🎙️ AquesTalk1 初年度ライセンス実費回収額（利益ゼロ上限）
+          </div>
+          <div class="meter-amount-big" id="voice-collected-yen">¥0</div>
+          <div class="meter-target-line">
+            初年度確定見積目標 <strong id="voice-target-yen">¥157,300</strong>（残り <span id="voice-remaining-yen">¥157,300</span> ／ 2年目以降年額 ¥107,800）
+          </div>
+
+          <div class="progress-track" role="progressbar" aria-valuemin="0" aria-valuemax="100">
+            <div id="voice-progress-bar" class="progress-fill" style="width: 0%"></div>
+          </div>
+
+          <div class="meter-kpis">
+            <div>
+              <div class="kpi-val" id="kpi-pct">0.0%</div>
+              <div class="kpi-lbl">ライセンス回収率</div>
+            </div>
+            <div>
+              <div class="kpi-val" id="kpi-ops-yen">¥0</div>
+              <div class="kpi-lbl">AI・運転費デポジット累計</div>
+            </div>
+            <div>
+              <div class="kpi-val" id="kpi-supporters">0件</div>
+              <div class="kpi-lbl">累計サポーター・決済</div>
+            </div>
+          </div>
+
+          <div id="hero-mini-buckets" class="mini-buckets"></div>
+        </aside>
+      </div>
+    </section>
+
+    <!-- Project Overview -->
+    <section id="overview" class="section">
+      <div class="container">
+        <div class="section-head">
+          <div class="section-eyebrow">Architecture &amp; Features</div>
+          <h2 class="section-title">140キャラ声種 × 50種性格シフト × ローカル素材参照のクリーン設計</h2>
+          <p class="section-desc">
+            株式会社アクエスト様への公式確認（2026年11月23日回答確定）と、第三者素材の再配布リスクをゼロにする「利用者PCローカルフォルダ参照方式」を採用した超省リソース設計（サーバー常駐メモリ約64.3MB・SQLite約140KB）です。
+          </p>
+        </div>
+
+        <div class="cards-3">
+          <article class="info-card">
+            <h3>🎙️ AquesTalk1 オンメモリ合成</h3>
+            <p>サーバー上で <code>AquesTalk_Synthe_Utf8()</code> により完全オンメモリ合成しHDD書出ゼロで配信。クライアントPC側での「1会話1ローカルセーブ（WAV＋会話履歴）」もアクエスト社許諾確認済みです。</p>
+          </article>
+          <article class="info-card">
+            <h3>🎭 50種の性格属性＆原作準拠導入</h3>
+            <p>博麗神社境内での霊夢との出会いなど原作設定に忠実なプロローグから開始し、プレイヤーの接し方で全50種の性格属性と好感度が毎ターン変化（好感度100で結婚式ゴール演出）。</p>
+          </article>
+          <article class="info-card">
+            <h3>🛡️ 外部素材・秘密鍵 完全非同梱</h3>
+            <p>『はるか式立ち絵』や背景素材はサーバー配信・クライアント同梱を一切行わず、利用者PC内の配置フォルダを直接参照。『東方キャラ立絵スタジオ』（PSD組替・色変え）も内蔵しています。</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- Transparent Cost Breakdown & Official Quote -->
+    <section id="cost-breakdown" class="section">
+      <div class="container">
+        <div class="section-head">
+          <div class="section-eyebrow">Official Quote &amp; Cost Structure</div>
+          <h2 class="section-title">株式会社アクエスト公式回答による確定見積と2軸の実費回収モデル</h2>
+          <p class="section-desc">
+            2026年11月23日付で受領した公式見積に基づき、「①AquesTalk1ライセンス固定費」と「②Gemini API・自宅Linuxサーバー運転変動費」を分離管理しています。固定費プール（初年度税込¥157,300）が100%に到達した瞬間、超過徴収は1円単位でブロックされ全プレイヤーへフルボイスが自動無料開放されます。
+          </p>
+        </div>
+
+        <div id="buckets-detail-grid" class="cards-3"></div>
+
+        <div class="data-table-wrap">
+          <table class="data-table" aria-label="AquesTalk1 ライセンス確定見積表">
+            <thead>
+              <tr>
+                <th>ライセンス正式名称（2026/11/23 確定）</th>
+                <th>費用区分・契約条件</th>
+                <th class="num">金額（税別）</th>
+                <th class="num">金額（税込 10%）</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>AquesTalk1 Linux 開発ライセンス</strong></td>
+                <td>イニシャル費用（初回のみ・買い切り）</td>
+                <td class="num">¥45,000</td>
+                <td class="num"><strong>¥49,500</strong></td>
+              </tr>
+              <tr>
+                <td><strong>AquesTalk1 使用ライセンス(サーバー版)</strong></td>
+                <td>ランニング費用（物理1台・2コア構成／1年毎更新）</td>
+                <td class="num">¥98,000</td>
+                <td class="num"><strong>¥107,800</strong></td>
+              </tr>
+              <tr style="background:rgba(244,114,182,0.1)">
+                <td><strong>初年度合計（イニシャル＋1年目サーバー）</strong></td>
+                <td>初年度 `voice_cost_pool` 回収上限（月換算 税込約¥13,108）</td>
+                <td class="num">¥143,000</td>
+                <td class="num"><strong style="color:var(--gold)">¥157,300</strong></td>
+              </tr>
+              <tr>
+                <td><strong>2年目以降合計（サーバー版更新のみ）</strong></td>
+                <td>次年度以降 年間維持費上限（月換算 税込約¥8,983）</td>
+                <td class="num">¥98,000</td>
+                <td class="num"><strong>¥107,800</strong></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- Supporter Packs & PayPal Checkout -->
+    <section id="support-packs" class="section">
+      <div class="container">
+        <div class="section-head">
+          <div class="section-eyebrow">PayPal Live Checkout (DIGITAL_GOODS)</div>
+          <h2 class="section-title">先行デポジットチャージ ＆ AquesTalk1 ボイス実費分担プラン受付</h2>
+          <p class="section-desc">
+            PayPal Live カタログ登録済みの全10商品（デポジット6種／ボイス単体4種）に対応しています。お支払い完了と同時に、ログイン不要でゲームクライアントに即時反映できる<strong>「先行サポーター引換コード（THRENAI-XXXX-XXXX-XXXX）」</strong>を発行します。
+          </p>
+        </div>
+
+        <div class="mode-tabs" role="tablist">
+          <button id="tab-deposit" type="button" class="mode-tab active" role="tab" aria-selected="true">
+            💰 共通デポジット先行チャージ（全6種：¥500〜¥10,000）＋ 同時プラン選択
+          </button>
+          <button id="tab-voice" type="button" class="mode-tab" role="tab" aria-selected="false">
+            🎙️ AquesTalk1 ボイスパス／枠 単独購入（全4種：¥100〜¥1,200・APIキー派向け）
+          </button>
+        </div>
+
+        <div class="support-layout">
+          <div>
+            <div id="products-container" class="tiers-list" role="radiogroup" aria-label="購入プラン一覧"></div>
+
+            <!-- デポジット選択時の同時充当プランカスタマイザ -->
+            <div id="deposit-combo-panel" class="combo-config-box">
+              <h4>⚙️ デポジット実効残高からの初回同時充当プラン選択（任意・残額はすべてデポジット残高として保持されます）</h4>
+              <div class="combo-grid">
+                <div class="form-group" style="margin-bottom:0">
+                  <label for="sel-combo-voice">🎙️ 同時適用するAquesTalk1ボイスプラン</label>
+                  <select id="sel-combo-voice" class="form-input"></select>
+                </div>
+                <div class="form-group" style="margin-bottom:0">
+                  <label for="sel-combo-prompt">💬 同時購入するAIプロンプト枠</label>
+                  <select id="sel-combo-prompt" class="form-input"></select>
+                </div>
+              </div>
+              <p id="combo-hint-msg" style="font-size:0.8rem;color:var(--text-muted);margin-top:8px"></p>
+            </div>
+          </div>
+
+          <aside class="checkout-panel">
+            <h3>💳 お申し込み内容・PayPal決済</h3>
+
+            <div class="summary-box">
+              <div class="summary-row">
+                <span>対象商品 (PayPal SKU)</span>
+                <strong id="sum-sku-label">-</strong>
+              </div>
+              <div class="summary-row">
+                <span>PayPal決済手数料 (3.6%+¥40)</span>
+                <span id="sum-fee-yen">-</span>
+              </div>
+              <div class="summary-row">
+                <span>手数料差引後の実効金額</span>
+                <span id="sum-net-yen">-</span>
+              </div>
+              <div class="summary-row">
+                <span>AquesTalk固定費プール計上</span>
+                <span id="sum-voice-pool-add" style="color:var(--sakura);font-weight:700">-</span>
+              </div>
+              <div class="summary-row">
+                <span>引換コード付与内容</span>
+                <span id="sum-grants-text" style="text-align:right;max-width:62%;color:#6ee7b7;font-weight:600">-</span>
+              </div>
+              <div class="summary-row total">
+                <span>お支払い総額（税込）</span>
+                <span id="sum-gross-yen">¥0</span>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="inp-supporter-name">サポーター名・ハンドルネーム（任意・16文字以内）</label>
+              <input id="inp-supporter-name" class="form-input" type="text" maxlength="16" placeholder="未入力時は「名無しの幻想郷サポーター」">
+            </div>
+
+            <div class="form-group">
+              <label for="inp-supporter-msg">応援メッセージ（任意・100文字以内）</label>
+              <input id="inp-supporter-msg" class="form-input" type="text" maxlength="100" placeholder="フルボイス本格稼働応援しています！">
+            </div>
+
+            <label class="chk-row">
+              <input id="chk-supporter-public" type="checkbox" checked>
+              <span>ページ下部の「実費分担サポーター芳名録」に名前・メッセージを掲載する</span>
+            </label>
+
+            <details style="margin-bottom:12px;font-size:0.8rem;color:var(--text-muted)">
+              <summary style="cursor:pointer">接続先APIサーバー設定（通常は変更不要）</summary>
+              <div style="display:flex;gap:6px;margin-top:6px">
+                <input id="inp-api-base" class="form-input" type="url" placeholder="https://... または http://debian.local:8096">
+                <button id="btn-apply-api-base" type="button" class="btn btn-secondary" style="padding:6px 12px;font-size:0.8rem">接続</button>
+              </div>
+            </details>
+
+            <div id="paypal-button-container"></div>
+            <p id="checkout-status" class="checkout-msg">ご希望の商品を選択してお支払いへお進みください。</p>
+
+            <!-- 決済完了・引換コード発行結果 -->
+            <div id="voucher-result-box" class="voucher-result hidden">
+              <strong style="color:#6ee7b7;display:block;margin-bottom:4px">🎉 お支払い完了・サポーター引換コード発行</strong>
+              <p style="font-size:0.82rem;color:#e2e8f0">以下の引換コードをゲームクライアントの「🎁 先行サポーター引換コード」欄に入力すると、ボイスパス・プロンプト・残高が即時反映されます。</p>
+              <div id="issued-voucher-code" class="voucher-code-box">THRENAI-XXXX-XXXX-XXXX</div>
+              <div style="display:flex;gap:8px;flex-wrap:wrap">
+                <button id="btn-copy-voucher" type="button" class="btn btn-secondary" style="padding:8px 14px;font-size:0.82rem;flex:1">📋 コードをコピー</button>
+                <button id="btn-download-receipt" type="button" class="btn btn-primary" style="padding:8px 14px;font-size:0.82rem;flex:1">💾 控え(.txt)を保存</button>
+              </div>
+            </div>
+          </aside>
+        </div>
+      </div>
+    </section>
+
+    <!-- Full Prompt & Voice Pricing Reference -->
+    <section id="pricing-reference" class="section">
+      <div class="container">
+        <div class="section-head">
+          <div class="section-eyebrow">Full Pricing &amp; Limits</div>
+          <h2 class="section-title">ゲーム内AIプロンプト価格表（全10段階・大容量プラン月間上限付）</h2>
+          <p class="section-desc">
+            超大容量プランは1回単価がGemini API原価に近くAquesTalk固定費の回収余地が小さいため、仕様書に基づき月間購入回数制限を設けています（AI新規オリジナル背景生成は1枚 ¥100）。
+          </p>
+        </div>
+
+        <div class="data-table-wrap">
+          <table class="data-table" aria-label="AIプロンプト全10プラン価格表">
+            <thead>
+              <tr>
+                <th>プランID</th>
+                <th class="num">会話プロンプト数</th>
+                <th class="num">デポジット消費額</th>
+                <th class="num">1回あたり単価</th>
+                <th>月間購入上限</th>
+                <th>特徴</th>
+              </tr>
+            </thead>
+            <tbody id="prompt-plans-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- Download & How to Redeem -->
+    <section id="download" class="section">
+      <div class="container">
+        <div class="section-head">
+          <div class="section-eyebrow">Free Client &amp; Redemption</div>
+          <h2 class="section-title">クライアント本体の無償ダウンロード＆引換手順</h2>
+          <p class="section-desc">
+            macOS / Linux / Windows 全対応。Python 3 標準ライブラリのみで動作し、<code>pip install</code> 不要ですぐに遊べます。
+          </p>
+        </div>
+
+        <div class="cards-3">
+          <article class="info-card">
+            <h3>1. 無償クライアントを取得</h3>
+            <p>GitHub配布パッケージをダウンロードし、お手持ちの「はるか式立ち絵」「背景」フォルダを起動画面の「ローカル素材フォルダ設定」で指定します。</p>
+            <div style="margin-top:14px;display:flex;gap:8px;flex-wrap:wrap">
+              <a id="link-dl-zip" href="https://raw.githubusercontent.com/9z2fqjckjv-bot/Toho-Studio/main/TouhouRenaiSimulator/packages/TouhouRenaiSimulator-ReadyToRun-AllOS.zip" class="btn btn-primary" style="padding:9px 16px;font-size:0.86rem">📦 全OS対応ZIPをDL</a>
+              <a id="link-dl-repo" href="https://github.com/9z2fqjckjv-bot/Toho-Studio/tree/main/TouhouRenaiSimulator" target="_blank" rel="noopener" class="btn btn-secondary" style="padding:9px 16px;font-size:0.86rem">GitHubを見る ↗</a>
+            </div>
+          </article>
+          <article class="info-card">
+            <h3>2. サーバー連携＆コード反映</h3>
+            <p>起動画面で「認証開始（サーバー連携）」を実行し、「AIの導入方法とボイス設定」画面にある「🎁 先行サポーター引換コード」欄にコードを入力して「コードを反映」を押します。</p>
+          </article>
+          <article class="info-card">
+            <h3>3. フルボイス＆AI対話スタート</h3>
+            <p>AquesTalk1ボイスパス／セリフ枠・プロンプト残数・デポジット残高が即座に加算され、140キャラクターとのフルボイス恋愛シミュレーションを楽しめます。</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- Supporters Wall -->
+    <section id="supporters" class="section">
+      <div class="container">
+        <div class="section-head">
+          <div class="section-eyebrow">Supporters Wall</div>
+          <h2 class="section-title">実費分担サポーター芳名録</h2>
+          <p class="section-desc">公開設定でご参加いただいたサポーターの皆様のお名前と応援メッセージです。</p>
+        </div>
+        <div id="supporters-wall" class="supporters-grid"></div>
+      </div>
+    </section>
+
+    <!-- Guidelines & Legal Disclosure -->
+    <section id="guidelines" class="section">
+      <div class="container">
+        <div class="section-head">
+          <div class="section-eyebrow">Guidelines &amp; Legal Disclosure</div>
+          <h2 class="section-title">東方Project二次創作ガイドライン準拠・特定商取引法に基づく表記</h2>
+        </div>
+
+        <table class="legal-table">
+          <tbody>
+            <tr>
+              <th>二次創作に関する明記</th>
+              <td>『東方Project恋愛シミュレーター』は<strong>上海アリス幻樂団</strong>様の『東方Project』を原作とする二次創作同人作品（個人ファン活動）です。原作および上海アリス幻樂団様とは一切関係ございません。また、クライアント・サーバーともにAquesTalkライブラリ本体（<code>.so/.dll</code>等）や第三者画像素材の無断同梱・再配布は一切行いません。</td>
+            </tr>
+            <tr>
+              <th>運営・販売主体</th>
+              <td id="legal-organizer">個人開発者 zuyasi（同人サークル活動・非営利実費分担運用）</td>
+            </tr>
+            <tr>
+              <th>連絡先メールアドレス</th>
+              <td><a id="legal-email" href="mailto:japan.saitama.nanndemoya@gmail.com">japan.saitama.nanndemoya@gmail.com</a>（※特定商取引法に基づき、請求があった場合は氏名・住所・電話番号を遅滞なく電子メールにて開示いたします）</td>
+            </tr>
+            <tr>
+              <th>提供価格・手数料と資金使途</th>
+              <td>各商品ページ記載の税込価格（¥100〜¥10,000、<code>NO_SHIPPING / DIGITAL_GOODS</code>）。PayPal決済手数料（<code>floor(金額 × 3.6%) + ¥40</code>）差引後の実効金額はすべてAquesTalk1ライセンス実費（初年度¥157,300／次年度以降¥107,800）およびGemini API・自宅Linuxサーバー運転実費にのみ充当され、AquesTalk固定費100%到達時点で追加徴収を自動停止・全員無料開放します。</td>
+            </tr>
+            <tr>
+              <th>支払方法・引渡時期</th>
+              <td>PayPal決済（PayPal残高・各種クレジットカード・デビットカード／日本円）。決済完了と同時にブラウザ画面上で引換コード（デジタル役務利用権）を即時発行します。</td>
+            </tr>
+            <tr>
+              <th>返品・キャンセルに関する特約</th>
+              <td>デジタル役務・即時コード発行の性質上、決済完了後の購入者都合によるキャンセル・返金はお受けできません。万一システム障害等により引換コードが利用できない場合はお問い合わせ窓口にて個別に対応いたします。</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container">
+      <p>原作：上海アリス幻樂団『東方Project』 ／ 音声合成エンジン：株式会社アクエスト『AquesTalk1』（2026年11月23日 ライセンス見積確定）</p>
+      <p style="margin-top:6px">© 2026 zuyasi — 東方Project恋愛シミュレーター 実費分担サポーターポータル（個人開発・利益ゼロ上限ストッパー搭載）</p>
+    </div>
+  </footer>
+
+  <script src="portal.js"></script>
+</body>
+</html>
