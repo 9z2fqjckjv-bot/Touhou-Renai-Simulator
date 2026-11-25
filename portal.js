@@ -563,6 +563,14 @@ function loadPayPalSdk(clientId, currency = "JPY") {
   });
 }
 
+function encodeThpp1Voucher(payloadObj) {
+  const bytes = new TextEncoder().encode(JSON.stringify(payloadObj));
+  let bin = "";
+  bytes.forEach((b) => { bin += String.fromCharCode(b); });
+  const b64url = btoa(bin).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+  return `THPP1-${b64url}`;
+}
+
 function showVoucherSuccess(receipt) {
   portalState.lastReceipt = receipt;
   $("voucher-result-box").classList.remove("hidden");
@@ -612,7 +620,7 @@ async function setupPayPalButtons() {
         const supporterMsg = $("inp-supporter-msg").value.trim();
         const isPublic = $("chk-supporter-public").checked;
 
-        if (portalState.serverOnline && portalState.apiBase) {
+        if (portalState.serverOnline && portalState.apiBase && ppCfg.rest_ready) {
           try {
             const resp = await fetch(`${portalState.apiBase}/api/public/paypal/create_order`, {
               method: "POST",
@@ -660,7 +668,24 @@ async function setupPayPalButtons() {
         const isPublic = $("chk-supporter-public").checked;
 
         statusEl.className = "checkout-msg";
-        statusEl.textContent = "お支払いを検証し、サポーター引換コードを発行しています…";
+        statusEl.textContent = "お支払いを確定し、サポーター引換コードを発行しています…";
+
+        // REST API 直結時はサーバー側 Capture、JS SDK (BAABOch...) 時は actions.order.capture() を先に実行
+        let jsDetails = null;
+        let captureId = "";
+        let capturedJpy = spec ? spec.grossYen : 0;
+
+        if (!ppCfg.rest_ready || !activeSupporterOrderId) {
+          jsDetails = await actions.order.capture();
+          const pu = (jsDetails.purchase_units || [{}])[0];
+          const caps = (pu.payments || {}).captures || [];
+          if (caps.length) {
+            captureId = caps[0].id || "";
+            if (caps[0].amount?.value) capturedJpy = Math.round(Number(caps[0].amount.value));
+          } else if (pu.amount?.value) {
+            capturedJpy = Math.round(Number(pu.amount.value));
+          }
+        }
 
         if (portalState.serverOnline && portalState.apiBase) {
           try {
@@ -669,7 +694,10 @@ async function setupPayPalButtons() {
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify({
                 supporter_order_id: activeSupporterOrderId,
-                paypal_order_id: data.orderID,
+                paypal_order_id: jsDetails?.id || data.orderID,
+                paypal_capture_id: captureId,
+                js_captured_status: jsDetails?.status || "",
+                captured_jpy: capturedJpy,
                 order_kind: spec ? spec.orderKind : "deposit",
                 sku: spec ? spec.sku : "",
                 voice_plan_id: spec ? spec.voicePlanId : "",
@@ -687,10 +715,10 @@ async function setupPayPalButtons() {
               }
               showVoucherSuccess({
                 voucher_code: capData.voucher_code,
-                paypal_order_id: data.orderID,
+                paypal_order_id: jsDetails?.id || data.orderID,
                 sku: spec ? spec.sku : "",
                 title: spec ? spec.title : "",
-                price_yen: spec ? spec.grossYen : 0,
+                price_yen: capturedJpy,
                 grants: capData.grants || (spec ? spec.grants : {}),
                 completed_at: new Date().toISOString(),
               });
@@ -699,13 +727,25 @@ async function setupPayPalButtons() {
           } catch (_) {}
         }
 
-        const details = await actions.order.capture();
+        const finalOrderId = jsDetails?.id || data.orderID;
+        const thpp1Code = encodeThpp1Voucher({
+          o: finalOrderId,
+          c: captureId || finalOrderId,
+          k: spec ? spec.orderKind : "deposit",
+          s: spec ? spec.sku : "",
+          v: spec ? spec.voicePlanId : "",
+          p: spec ? spec.promptPlanId : "",
+          a: capturedJpy,
+          n: supporterName.slice(0, 16),
+          m: supporterMsg.slice(0, 80),
+          u: isPublic ? 1 : 0,
+        });
         showVoucherSuccess({
-          voucher_code: `PPORDER-${details.id}`,
-          paypal_order_id: details.id,
+          voucher_code: thpp1Code,
+          paypal_order_id: finalOrderId,
           sku: spec ? spec.sku : "",
           title: spec ? spec.title : "",
-          price_yen: spec ? spec.grossYen : 0,
+          price_yen: capturedJpy,
           grants: spec ? spec.grants : {},
           completed_at: new Date().toISOString(),
         });
