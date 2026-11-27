@@ -1,20 +1,21 @@
 /**
- * 東方Project恋愛シミュレーター 実費分担サポーター＆先行デポジット Webポータル (portal.js v2.0)
- * 『touhou_renai_project_plan_bundle.md』確定仕様 完全準拠:
- *   - PayPal Live 登録済み全10商品 (THRENAI-DEPOSIT-500..10000 / THRENAI-VOICE-*) 対応
- *   - 決済手数料計算: Math.floor(金額 * 0.036) + 40
- *   - AquesTalk1 固定費プール (¥157,300) 利益ゼロ上限ストッパー連動
+ * 東方Project恋愛シミュレーター 実費分担サポーター＆PayPal定期購読 Webポータル (portal.js v2.1)
+ *   - PayPal Live 全10製品グループ (THRENAI-DEPOSIT-500..10000 / THRENAI-VOICE-*)
+ *     および全10購読プラン (Billing Plans: P-...) 完全紐づけ
+ *   - PayPal サブスクリプション購読登録 (vault=true&intent=subscription / createSubscription)
+ *     ＋ 公式ホスト型購読URL直リンク ＋ 1回のみ購入 (intent=capture / createOrder) 切替対応
  */
 
 const portalState = {
   apiBase: "",
   serverOnline: false,
   campaign: null,
-  orderKind: "deposit", // "deposit" | "voice_direct"
+  paymentMode: "subscription", // "subscription" | "one_time"
+  orderKind: "deposit",        // "deposit" | "voice_direct"
   selectedSku: "",
   comboVoiceId: "",
   comboPromptId: "",
-  paypalSdkLoadedClientId: "",
+  paypalSdkLoadedKey: "",
   lastReceipt: null,
 };
 
@@ -123,7 +124,7 @@ function renderCampaignUI() {
     syncBadge.textContent = "自宅Debianサーバー(8096) リアルタイム同期中";
   } else {
     syncBadge.className = "live-dot offline";
-    syncBadge.textContent = "公開スナップショット表示中 (PayPal Live有効)";
+    syncBadge.textContent = "公開スナップショット表示中 (PayPal Live購読有効)";
   }
   $("meter-period-label").textContent = `対象期間: ${c.period_key || "year_1"}`;
 
@@ -175,7 +176,7 @@ function renderCampaignUI() {
     sub.style.color = b.is_reached ? "#6ee7b7" : "#38bdf8";
     sub.textContent = b.target_yen > 0
       ? (b.is_reached ? "🎉 100%回収達成（自動ストッパー発動済）" : `現在 ${fmtYen(b.collected_yen)} 回収済（残り ${fmtYen(b.remaining_yen)}）`)
-      : "デポジット＆プロンプト購入実効残高から原価充当（APIキー指定モードは¥0）";
+      : "定期購読・都度デポジット実効残高から原価充当（APIキー指定モードは¥0）";
     const desc = document.createElement("p");
     desc.textContent = b.description;
     card.append(h3, amt, sub, desc);
@@ -192,9 +193,110 @@ function renderCampaignUI() {
     $("legal-email").href = `mailto:${c.organizer.contact_email}`;
   }
 
+  renderSubscriptionCatalogTable();
   renderPromptReferenceTable();
   renderProductsSection();
   renderSupportersWall();
+}
+
+function selectPlanAndFocusCheckout(kind, sku, forceMode = "subscription") {
+  portalState.orderKind = kind;
+  portalState.selectedSku = sku;
+  if (kind === "deposit") {
+    const dep = (portalState.campaign?.deposit_products || []).find((d) => d.sku === sku);
+    if (dep) applyRecommendedComboForDeposit(dep);
+  }
+  const modeChanged = portalState.paymentMode !== forceMode;
+  portalState.paymentMode = forceMode;
+  renderProductsSection();
+  if (modeChanged) {
+    setupPayPalButtons();
+  }
+  const box = $("checkout-panel-box");
+  if (box) {
+    box.scrollIntoView({ behavior: "smooth", block: "nearest" });
+  }
+}
+
+function renderSubscriptionCatalogTable() {
+  const tbody = $("subscription-plans-tbody");
+  if (!tbody) return;
+  tbody.innerHTML = "";
+  const c = portalState.campaign;
+  if (!c) return;
+
+  const allItems = [
+    ...(c.deposit_products || []).map((d) => ({
+      kind: "deposit",
+      sku: d.sku,
+      planName: d.plan_name || `デポジット ${d.gross_yen.toLocaleString()}円 月額定期チャージ購読プラン`,
+      planId: d.plan_id || "-",
+      cycleLabel: d.cycle_label || `月額 ${fmtYen(d.gross_yen)}`,
+      detail: `実効残高 ${fmtYen(d.net_yen)} / サイクル`,
+      subscribeUrl: d.subscribe_url || (d.plan_id ? `https://www.paypal.com/webapps/billing/plans/subscribe?plan_id=${d.plan_id}` : "#"),
+    })),
+    ...(c.voice_products || []).map((v) => {
+      const { net } = calcFeeAndNet(v.price_yen, c.paypal);
+      return {
+        kind: "voice_direct",
+        sku: v.sku,
+        planName: v.plan_name || `${v.name} 購読プラン`,
+        planId: v.plan_id || "-",
+        cycleLabel: v.cycle_label || fmtYen(v.price_yen),
+        detail: v.days >= 365 ? "365日フルボイス無制限" : (v.days > 0 ? "1ヶ月フルボイス無制限" : `ボイス${v.credits}セリフ枠補充（実効${fmtYen(net)}）`),
+        subscribeUrl: v.subscribe_url || (v.plan_id ? `https://www.paypal.com/webapps/billing/plans/subscribe?plan_id=${v.plan_id}` : "#"),
+      };
+    }),
+  ];
+
+  allItems.forEach((it) => {
+    const tr = document.createElement("tr");
+
+    const tdSku = document.createElement("td");
+    tdSku.innerHTML = `<span class="sku-code">${it.sku}</span>`;
+
+    const tdName = document.createElement("td");
+    tdName.style.fontWeight = "700";
+    tdName.textContent = it.planName;
+
+    const tdPid = document.createElement("td");
+    tdPid.innerHTML = `<code class="sku-code">${it.planId}</code>`;
+
+    const tdCycle = document.createElement("td");
+    tdCycle.style.color = "var(--gold)";
+    tdCycle.style.fontWeight = "700";
+    tdCycle.textContent = it.cycleLabel;
+
+    const tdDet = document.createElement("td");
+    tdDet.className = "num";
+    tdDet.textContent = it.detail;
+
+    const tdAct = document.createElement("td");
+    const actWrap = document.createElement("div");
+    actWrap.style.display = "flex";
+    actWrap.style.gap = "6px";
+    actWrap.style.flexWrap = "wrap";
+
+    const btnSel = document.createElement("button");
+    btnSel.type = "button";
+    btnSel.className = "card-sub-btn";
+    btnSel.textContent = "🔄 購読選択";
+    btnSel.onclick = () => selectPlanAndFocusCheckout(it.kind, it.sku, "subscription");
+
+    const aDirect = document.createElement("a");
+    aDirect.href = it.subscribeUrl;
+    aDirect.target = "_blank";
+    aDirect.rel = "noopener";
+    aDirect.className = "card-sub-link";
+    aDirect.textContent = "PayPal購読 ↗";
+    aDirect.onclick = () => savePendingCheckoutToLocal(it.kind, it.sku);
+
+    actWrap.append(btnSel, aDirect);
+    tdAct.appendChild(actWrap);
+
+    tr.append(tdSku, tdName, tdPid, tdCycle, tdDet, tdAct);
+    tbody.appendChild(tr);
+  });
 }
 
 function renderPromptReferenceTable() {
@@ -231,6 +333,61 @@ function applyRecommendedComboForDeposit(depSpec) {
   portalState.comboPromptId = depSpec.recommended_combo.prompt_plan_id || "";
 }
 
+function savePendingCheckoutToLocal(kind, sku) {
+  try {
+    localStorage.setItem("threnai_pending_sub", JSON.stringify({
+      orderKind: kind,
+      sku,
+      voicePlanId: kind === "deposit" ? portalState.comboVoiceId : "",
+      promptPlanId: kind === "deposit" ? portalState.comboPromptId : "",
+      supporterName: $("inp-supporter-name")?.value.trim() || "",
+      supporterMsg: $("inp-supporter-msg")?.value.trim() || "",
+      isPublic: $("chk-supporter-public") ? $("chk-supporter-public").checked : true,
+      ts: Date.now(),
+    }));
+  } catch (_) {}
+}
+
+function buildCardActionRow(kind, sku, planId, subUrl) {
+  const row = document.createElement("div");
+  row.className = "tier-actions-row";
+
+  const metaSpan = document.createElement("span");
+  metaSpan.className = "sku-code";
+  metaSpan.textContent = planId ? `購読Plan: ${planId}` : `SKU: ${sku}`;
+
+  const btns = document.createElement("div");
+  btns.className = "tier-action-btns";
+
+  const btnSub = document.createElement("button");
+  btnSub.type = "button";
+  btnSub.className = "card-sub-btn";
+  btnSub.textContent = "🔄 このプランを購読登録";
+  btnSub.onclick = (e) => {
+    e.stopPropagation();
+    selectPlanAndFocusCheckout(kind, sku, "subscription");
+  };
+
+  btns.appendChild(btnSub);
+
+  if (planId && subUrl) {
+    const aDirect = document.createElement("a");
+    aDirect.href = subUrl;
+    aDirect.target = "_blank";
+    aDirect.rel = "noopener";
+    aDirect.className = "card-sub-link";
+    aDirect.textContent = "PayPal購読画面 ↗";
+    aDirect.onclick = (e) => {
+      e.stopPropagation();
+      savePendingCheckoutToLocal(kind, sku);
+    };
+    btns.appendChild(aDirect);
+  }
+
+  row.append(metaSpan, btns);
+  return row;
+}
+
 function renderProductsSection() {
   const c = portalState.campaign;
   if (!c) return;
@@ -241,8 +398,15 @@ function renderProductsSection() {
   $("tab-voice").setAttribute("aria-selected", portalState.orderKind === "voice_direct" ? "true" : "false");
   $("deposit-combo-panel").classList.toggle("hidden", portalState.orderKind !== "deposit");
 
+  $("btn-paymode-sub").classList.toggle("active", portalState.paymentMode === "subscription");
+  $("btn-paymode-sub").setAttribute("aria-selected", portalState.paymentMode === "subscription" ? "true" : "false");
+  $("btn-paymode-once").classList.toggle("active", portalState.paymentMode === "one_time");
+  $("btn-paymode-once").setAttribute("aria-selected", portalState.paymentMode === "one_time" ? "true" : "false");
+
   const wrap = $("products-container");
   wrap.innerHTML = "";
+
+  const isSub = portalState.paymentMode === "subscription";
 
   if (portalState.orderKind === "deposit") {
     const deps = c.deposit_products || [];
@@ -265,7 +429,9 @@ function renderProductsSection() {
       const left = document.createElement("div");
       const nm = document.createElement("span");
       nm.className = "tier-name";
-      nm.textContent = `デポジット ${dep.gross_yen.toLocaleString()}円 チャージ`;
+      nm.textContent = isSub
+        ? (dep.plan_name || `デポジット ${dep.gross_yen.toLocaleString()}円 月額定期チャージ購読`)
+        : `デポジット ${dep.gross_yen.toLocaleString()}円 単発チャージ`;
       left.appendChild(nm);
       if (dep.badge) {
         const b = document.createElement("span");
@@ -275,12 +441,15 @@ function renderProductsSection() {
       }
       const pr = document.createElement("div");
       pr.className = "tier-price";
-      pr.textContent = fmtYen(dep.gross_yen);
+      pr.textContent = isSub ? `${fmtYen(dep.gross_yen)} / 月` : fmtYen(dep.gross_yen);
       top.append(left, pr);
 
       const desc = document.createElement("p");
       desc.className = "tier-desc";
-      desc.textContent = `PayPal手数料 ${fmtYen(dep.fee_yen)} 差引 → ゲーム内実効チャージ額 ${fmtYen(dep.net_yen)}（SKU: ${dep.sku}）`;
+      desc.textContent = `PayPal手数料 ${fmtYen(dep.fee_yen)} 差引 → 1回あたりゲーム内実効チャージ額 ${fmtYen(dep.net_yen)}（製品グループ: ${dep.sku}）`;
+
+      const subUrl = dep.subscribe_url || (dep.plan_id ? `https://www.paypal.com/webapps/billing/plans/subscribe?plan_id=${dep.plan_id}` : "");
+      const actRow = buildCardActionRow("deposit", dep.sku, dep.plan_id || "", subUrl);
 
       const selectFn = () => {
         portalState.selectedSku = dep.sku;
@@ -295,7 +464,7 @@ function renderProductsSection() {
         }
       };
 
-      card.append(top, desc);
+      card.append(top, desc, actRow);
       wrap.appendChild(card);
     });
 
@@ -318,7 +487,7 @@ function renderProductsSection() {
       const left = document.createElement("div");
       const nm = document.createElement("span");
       nm.className = "tier-name";
-      nm.textContent = vp.name;
+      nm.textContent = isSub ? (vp.plan_name || vp.name) : vp.name;
       left.appendChild(nm);
       if (vp.recommended) {
         const b = document.createElement("span");
@@ -326,14 +495,18 @@ function renderProductsSection() {
         b.textContent = "定番おすすめ";
         left.appendChild(b);
       }
+      const suffix = vp.interval_unit === "YEAR" ? " / 年" : " / 月";
       const pr = document.createElement("div");
       pr.className = "tier-price";
-      pr.textContent = fmtYen(vp.price_yen);
+      pr.textContent = isSub ? `${fmtYen(vp.price_yen)}${suffix}` : fmtYen(vp.price_yen);
       top.append(left, pr);
 
       const desc = document.createElement("p");
       desc.className = "tier-desc";
-      desc.textContent = `${vp.desc}（SKU: ${vp.sku}）`;
+      desc.textContent = `${vp.desc}（製品グループ: ${vp.sku}）`;
+
+      const subUrl = vp.subscribe_url || (vp.plan_id ? `https://www.paypal.com/webapps/billing/plans/subscribe?plan_id=${vp.plan_id}` : "");
+      const actRow = buildCardActionRow("voice_direct", vp.sku, vp.plan_id || "", subUrl);
 
       const selectFn = () => {
         portalState.selectedSku = vp.sku;
@@ -347,7 +520,7 @@ function renderProductsSection() {
         }
       };
 
-      card.append(top, desc);
+      card.append(top, desc, actRow);
       wrap.appendChild(card);
     });
   }
@@ -417,27 +590,34 @@ function computeCurrentCheckoutSpec() {
   const c = portalState.campaign;
   if (!c) return null;
   const vRem = Number(c.voice_pool?.remaining_yen ?? 157300);
+  const isSub = portalState.paymentMode === "subscription";
 
   if (portalState.orderKind === "voice_direct") {
     const vp = (c.voice_products || []).find((v) => v.sku === portalState.selectedSku);
     if (!vp) return null;
-    const gross = vRem > 0 ? Math.min(vp.price_yen, vRem) : 0;
+    const gross = isSub ? vp.price_yen : (vRem > 0 ? Math.min(vp.price_yen, vRem) : 0);
     const { fee, net } = gross > 0 ? calcFeeAndNet(gross, c.paypal) : { fee: 0, net: 0 };
+    const planId = vp.plan_id || "";
+    const subUrl = vp.subscribe_url || (planId ? `https://www.paypal.com/webapps/billing/plans/subscribe?plan_id=${planId}` : "");
     return {
+      paymentMode: portalState.paymentMode,
       orderKind: "voice_direct",
       sku: vp.sku,
-      title: vp.name,
+      planId,
+      subscribeUrl: subUrl,
+      cycleLabel: isSub ? (vp.cycle_label || "定期購読") : "1回のみ単発決済",
+      title: isSub ? (vp.plan_name || vp.name) : vp.name,
       grossYen: gross,
       feeYen: fee,
       netYen: net,
       voicePlanId: vp.voice_plan_id,
       promptPlanId: "",
-      voicePoolAdd: gross,
+      voicePoolAdd: Math.min(gross, vRem),
       grants: {
         deposit_yen: 0,
         prompts: 0,
         voice_credits: vp.credits || 0,
-        voice_pass_days: vp.days || 0,
+        voice_pass_days: vp.days === 30 ? 31 : (vp.days || 0),
       },
       blockedReason: vRem <= 0 ? "今年度のAquesTalk1ライセンス実費は100%達成済みのため無料開放中です！" : "",
     };
@@ -452,11 +632,17 @@ function computeCurrentCheckoutSpec() {
   const voiceCharge = vp && vRem > 0 ? Math.min(vp.price_yen, vRem) : 0;
   const promptCharge = pp ? pp.price_yen : 0;
   const leftover = Math.max(0, net - voiceCharge - promptCharge);
+  const planId = dep.plan_id || "";
+  const subUrl = dep.subscribe_url || (planId ? `https://www.paypal.com/webapps/billing/plans/subscribe?plan_id=${planId}` : "");
 
   return {
+    paymentMode: portalState.paymentMode,
     orderKind: "deposit",
     sku: dep.sku,
-    title: `デポジット ${dep.gross_yen.toLocaleString()}円`,
+    planId,
+    subscribeUrl: subUrl,
+    cycleLabel: isSub ? (dep.cycle_label || `月額 ${fmtYen(dep.gross_yen)}`) : "1回のみ単発決済",
+    title: isSub ? (dep.plan_name || `デポジット ${dep.gross_yen.toLocaleString()}円 月額購読`) : `デポジット ${dep.gross_yen.toLocaleString()}円`,
     grossYen: dep.gross_yen,
     feeYen: fee,
     netYen: net,
@@ -467,7 +653,7 @@ function computeCurrentCheckoutSpec() {
       deposit_yen: leftover,
       prompts: pp ? pp.prompts : 0,
       voice_credits: vp && vRem > 0 ? (vp.credits || 0) : 0,
-      voice_pass_days: vp && vRem > 0 ? (vp.days || 0) : 0,
+      voice_pass_days: vp && vRem > 0 ? (vp.days === 30 ? 31 : (vp.days || 0)) : 0,
     },
     blockedReason: "",
   };
@@ -476,12 +662,33 @@ function computeCurrentCheckoutSpec() {
 function updateCheckoutSummary() {
   const spec = computeCurrentCheckoutSpec();
   if (!spec) return;
+
+  const isSub = spec.paymentMode === "subscription";
+  $("sum-paymode-label").textContent = isSub ? "🔄 PayPal定期購読（いつでも解約可）" : "⚡ 1回のみ単発決済";
+  $("sum-paymode-label").style.color = isSub ? "var(--sky)" : "var(--gold)";
   $("sum-sku-label").textContent = spec.sku;
+  $("sum-plan-row").classList.toggle("hidden", !isSub);
+  $("sum-plan-id").textContent = spec.planId || "-";
+  $("sum-cycle-label").textContent = spec.cycleLabel;
   $("sum-fee-yen").textContent = `-${fmtYen(spec.feeYen)}`;
   $("sum-net-yen").textContent = fmtYen(spec.netYen);
   $("sum-voice-pool-add").textContent = fmtYen(spec.voicePoolAdd);
   $("sum-grants-text").textContent = formatGrantsShort(spec.grants);
+  $("sum-total-caption").textContent = isSub ? "初回・更新お支払い額（税込）" : "お支払い総額（税込）";
   $("sum-gross-yen").textContent = fmtYen(spec.grossYen);
+
+  const directWrap = $("direct-subscribe-wrap");
+  const directBtn = $("btn-direct-paypal-subscribe");
+  if (directWrap && directBtn) {
+    if (isSub && spec.planId && spec.subscribeUrl && !spec.blockedReason) {
+      directWrap.classList.remove("hidden");
+      directBtn.href = spec.subscribeUrl;
+      directBtn.textContent = `🔗 PayPal公式画面で「${spec.title}」を購読登録 ↗`;
+      directBtn.onclick = () => savePendingCheckoutToLocal(spec.orderKind, spec.sku);
+    } else {
+      directWrap.classList.add("hidden");
+    }
+  }
 
   if ($("combo-hint-msg") && spec.orderKind === "deposit") {
     $("combo-hint-msg").textContent =
@@ -531,31 +738,42 @@ function renderSupportersWall() {
   });
 }
 
-function loadPayPalSdk(clientId, currency = "JPY") {
+function loadPayPalSdk(clientId, currency = "JPY", mode = "subscription") {
+  const sdkKey = `${clientId}|${currency}|${mode}`;
   return new Promise((resolve, reject) => {
     if (!clientId) {
       reject(new Error("PayPal Client ID が未設定です。"));
       return;
     }
-    if (window.paypal && portalState.paypalSdkLoadedClientId === clientId) {
+    if (window.paypal && portalState.paypalSdkLoadedKey === sdkKey) {
       resolve(window.paypal);
       return;
     }
     const existing = document.getElementById("paypal-js-sdk");
     if (existing) existing.remove();
+    try {
+      delete window.paypal;
+    } catch (_) {
+      window.paypal = undefined;
+    }
 
     const script = document.createElement("script");
     script.id = "paypal-js-sdk";
     const params = new URLSearchParams({
       "client-id": clientId,
       currency,
-      intent: "capture",
       locale: "ja_JP",
     });
+    if (mode === "subscription") {
+      params.set("vault", "true");
+      params.set("intent", "subscription");
+    } else {
+      params.set("intent", "capture");
+    }
     script.src = `https://www.paypal.com/sdk/js?${params.toString()}`;
     script.async = true;
     script.onload = () => {
-      portalState.paypalSdkLoadedClientId = clientId;
+      portalState.paypalSdkLoadedKey = sdkKey;
       resolve(window.paypal);
     };
     script.onerror = () => reject(new Error("PayPal JavaScript SDK の読み込みに失敗しました。"));
@@ -574,10 +792,107 @@ function encodeThpp1Voucher(payloadObj) {
 function showVoucherSuccess(receipt) {
   portalState.lastReceipt = receipt;
   $("voucher-result-box").classList.remove("hidden");
-  $("issued-voucher-code").textContent = receipt.voucher_code || `PPORDER-${receipt.paypal_order_id}`;
+  $("voucher-result-heading").textContent = receipt.payment_mode === "subscription"
+    ? "🎉 PayPal購読登録完了・サポーター引換コード発行"
+    : "🎉 お支払い完了・サポーター引換コード発行";
+  $("issued-voucher-code").textContent = receipt.voucher_code || receipt.paypal_subscription_id || `PPORDER-${receipt.paypal_order_id}`;
+
+  const subLine = $("issued-sub-id-line");
+  if (subLine) {
+    if (receipt.paypal_subscription_id) {
+      subLine.classList.remove("hidden");
+      subLine.textContent = `PayPal 購読ID: ${receipt.paypal_subscription_id}（プランID: ${receipt.plan_id || "-"}）`;
+    } else {
+      subLine.classList.add("hidden");
+      subLine.textContent = "";
+    }
+  }
+
   const statusEl = $("checkout-status");
   statusEl.className = "checkout-msg";
-  statusEl.textContent = "決済が完了し、サポーター引換コードが発行されました！下のボタンから控えを保存してください。";
+  statusEl.textContent = receipt.payment_mode === "subscription"
+    ? "PayPal購読登録が完了し、サポーター引換コードが発行されました！下のボタンから控えを保存してください。"
+    : "決済が完了し、サポーター引換コードが発行されました！下のボタンから控えを保存してください。";
+}
+
+async function finalizeSubscriptionApproval({ subscriptionId, supporterOrderId = "", spec = null }) {
+  const activeSpec = spec || computeCurrentCheckoutSpec();
+  const supporterName = $("inp-supporter-name")?.value.trim() || "";
+  const supporterMsg = $("inp-supporter-msg")?.value.trim() || "";
+  const isPublic = $("chk-supporter-public") ? $("chk-supporter-public").checked : true;
+  const statusEl = $("checkout-status");
+
+  statusEl.className = "checkout-msg";
+  statusEl.textContent = `PayPal購読 (${subscriptionId}) を確認し、引換コードを発行しています…`;
+
+  if (portalState.serverOnline && portalState.apiBase) {
+    try {
+      const resp = await fetch(`${portalState.apiBase}/api/public/paypal/activate_subscription`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          supporter_order_id: supporterOrderId,
+          paypal_subscription_id: subscriptionId,
+          plan_id: activeSpec ? activeSpec.planId : "",
+          order_kind: activeSpec ? activeSpec.orderKind : "deposit",
+          sku: activeSpec ? activeSpec.sku : "",
+          voice_plan_id: activeSpec ? activeSpec.voicePlanId : "",
+          prompt_plan_id: activeSpec ? activeSpec.promptPlanId : "",
+          supporter_name: supporterName,
+          supporter_message: supporterMsg,
+          is_public: isPublic,
+        }),
+      });
+      if (resp.ok) {
+        const d = await resp.json();
+        if (d.campaign) {
+          portalState.campaign = d.campaign;
+          renderCampaignUI();
+        }
+        showVoucherSuccess({
+          payment_mode: "subscription",
+          voucher_code: d.voucher_code || subscriptionId,
+          paypal_subscription_id: subscriptionId,
+          paypal_order_id: subscriptionId,
+          plan_id: d.plan_id || (activeSpec ? activeSpec.planId : ""),
+          sku: activeSpec ? activeSpec.sku : "",
+          title: activeSpec ? activeSpec.title : "PayPal定期購読プラン",
+          price_yen: activeSpec ? activeSpec.grossYen : 0,
+          grants: d.grants || (activeSpec ? activeSpec.grants : {}),
+          completed_at: new Date().toISOString(),
+        });
+        return;
+      }
+    } catch (_) {}
+  }
+
+  const thpp1Code = encodeThpp1Voucher({
+    t: "subscription",
+    o: subscriptionId,
+    c: subscriptionId,
+    pl: activeSpec ? activeSpec.planId : "",
+    k: activeSpec ? activeSpec.orderKind : "deposit",
+    s: activeSpec ? activeSpec.sku : "",
+    v: activeSpec ? activeSpec.voicePlanId : "",
+    p: activeSpec ? activeSpec.promptPlanId : "",
+    a: activeSpec ? activeSpec.grossYen : 0,
+    n: supporterName.slice(0, 16),
+    m: supporterMsg.slice(0, 80),
+    u: isPublic ? 1 : 0,
+  });
+
+  showVoucherSuccess({
+    payment_mode: "subscription",
+    voucher_code: thpp1Code,
+    paypal_subscription_id: subscriptionId,
+    paypal_order_id: subscriptionId,
+    plan_id: activeSpec ? activeSpec.planId : "",
+    sku: activeSpec ? activeSpec.sku : "",
+    title: activeSpec ? activeSpec.title : "PayPal定期購読プラン",
+    price_yen: activeSpec ? activeSpec.grossYen : 0,
+    grants: activeSpec ? activeSpec.grants : {},
+    completed_at: new Date().toISOString(),
+  });
 }
 
 async function setupPayPalButtons() {
@@ -593,10 +908,102 @@ async function setupPayPalButtons() {
     return;
   }
 
+  const mode = portalState.paymentMode;
+
   try {
-    const paypal = await loadPayPalSdk(clientId, ppCfg.currency || "JPY");
+    const paypal = await loadPayPalSdk(clientId, ppCfg.currency || "JPY", mode);
+
+    if (mode === "subscription") {
+      statusEl.className = "checkout-msg";
+      statusEl.textContent = "下のPayPal「購読」ボタンから定期購読登録へお進みいただけます（いつでも解約可能）。";
+
+      let activeSupporterOrderId = "";
+
+      paypal.Buttons({
+        style: {
+          layout: "vertical",
+          color: "gold",
+          shape: "rect",
+          label: "subscribe",
+        },
+        createSubscription: async (_data, actions) => {
+          const spec = computeCurrentCheckoutSpec();
+          if (!spec) throw new Error("購読プランを選択してください。");
+          if (spec.blockedReason) throw new Error(spec.blockedReason);
+          if (!spec.planId || !spec.planId.startsWith("P-")) {
+            throw new Error("選択商品のPayPal購読プランID (P-...) が見つかりません。");
+          }
+
+          activeSupporterOrderId = "";
+          statusEl.className = "checkout-msg";
+          statusEl.textContent = `PayPal購読プラン (${spec.planId}) を開始しています…`;
+
+          const supporterName = $("inp-supporter-name").value.trim();
+          const supporterMsg = $("inp-supporter-msg").value.trim();
+          const isPublic = $("chk-supporter-public").checked;
+
+          if (portalState.serverOnline && portalState.apiBase && ppCfg.rest_ready) {
+            try {
+              const resp = await fetch(`${portalState.apiBase}/api/public/paypal/create_subscription`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  order_kind: spec.orderKind,
+                  sku: spec.sku,
+                  plan_id: spec.planId,
+                  voice_plan_id: spec.voicePlanId,
+                  prompt_plan_id: spec.promptPlanId,
+                  supporter_name: supporterName,
+                  supporter_message: supporterMsg,
+                  is_public: isPublic,
+                  return_url: window.location.href.split("?")[0],
+                  cancel_url: window.location.href.split("?")[0],
+                }),
+              });
+              if (resp.ok) {
+                const d = await resp.json();
+                if (d.paypal_subscription_id && !d.paypal_subscription_id.startsWith("I-SIM")) {
+                  activeSupporterOrderId = d.supporter_order_id || "";
+                  return d.paypal_subscription_id;
+                }
+              }
+            } catch (_) {}
+          }
+
+          return actions.subscription.create({
+            plan_id: spec.planId,
+            custom_id: `${spec.sku}|${spec.voicePlanId || "-"}|${spec.promptPlanId || "-"}`.slice(0, 127),
+            application_context: {
+              brand_name: "東方Project恋愛シミュレーター",
+              locale: "ja-JP",
+              shipping_preference: "NO_SHIPPING",
+              user_action: "SUBSCRIBE_NOW",
+            },
+          });
+        },
+        onApprove: async (data) => {
+          const subId = data.subscriptionID || data.orderID;
+          await finalizeSubscriptionApproval({
+            subscriptionId: subId,
+            supporterOrderId: activeSupporterOrderId,
+            spec: computeCurrentCheckoutSpec(),
+          });
+        },
+        onCancel: () => {
+          statusEl.className = "checkout-msg";
+          statusEl.textContent = "PayPal購読登録手続きをキャンセルしました。";
+        },
+        onError: (err) => {
+          statusEl.className = "checkout-msg error";
+          statusEl.textContent = `PayPal購読エラー: ${err?.message || err}`;
+        },
+      }).render("#paypal-button-container");
+      return;
+    }
+
+    // 1回のみ購入 (intent=capture) モード
     statusEl.className = "checkout-msg";
-    statusEl.textContent = "PayPal残高 または クレジットカード／デビットカードでお支払いいただけます。";
+    statusEl.textContent = "1回のみの都度決済（自動継続なし）としてお支払いいただけます。";
 
     let activeSupporterOrderId = "";
 
@@ -633,8 +1040,8 @@ async function setupPayPalButtons() {
                 supporter_name: supporterName,
                 supporter_message: supporterMsg,
                 is_public: isPublic,
-                return_url: window.location.href,
-                cancel_url: window.location.href,
+                return_url: window.location.href.split("?")[0],
+                cancel_url: window.location.href.split("?")[0],
               }),
             });
             if (resp.ok) {
@@ -670,7 +1077,6 @@ async function setupPayPalButtons() {
         statusEl.className = "checkout-msg";
         statusEl.textContent = "お支払いを確定し、サポーター引換コードを発行しています…";
 
-        // REST API 直結時はサーバー側 Capture、JS SDK (BAABOch...) 時は actions.order.capture() を先に実行
         let jsDetails = null;
         let captureId = "";
         let capturedJpy = spec ? spec.grossYen : 0;
@@ -714,6 +1120,7 @@ async function setupPayPalButtons() {
                 renderCampaignUI();
               }
               showVoucherSuccess({
+                payment_mode: "one_time",
                 voucher_code: capData.voucher_code,
                 paypal_order_id: jsDetails?.id || data.orderID,
                 sku: spec ? spec.sku : "",
@@ -729,6 +1136,7 @@ async function setupPayPalButtons() {
 
         const finalOrderId = jsDetails?.id || data.orderID;
         const thpp1Code = encodeThpp1Voucher({
+          t: "one_time",
           o: finalOrderId,
           c: captureId || finalOrderId,
           k: spec ? spec.orderKind : "deposit",
@@ -741,6 +1149,7 @@ async function setupPayPalButtons() {
           u: isPublic ? 1 : 0,
         });
         showVoucherSuccess({
+          payment_mode: "one_time",
           voucher_code: thpp1Code,
           paypal_order_id: finalOrderId,
           sku: spec ? spec.sku : "",
@@ -761,8 +1170,41 @@ async function setupPayPalButtons() {
     }).render("#paypal-button-container");
   } catch (err) {
     statusEl.className = "checkout-msg error";
-    statusEl.textContent = err.message || "PayPal決済ボタンの初期化に失敗しました。";
+    statusEl.textContent = err.message || "PayPalボタンの初期化に失敗しました。";
   }
+}
+
+async function checkSubscriptionReturnRedirect() {
+  const params = new URLSearchParams(window.location.search);
+  const subId = (params.get("subscription_id") || "").trim();
+  const supOid = (params.get("supporter_order_id") || "").trim();
+  if (!subId || !subId.startsWith("I-")) return;
+
+  try {
+    const savedRaw = localStorage.getItem("threnai_pending_sub");
+    if (savedRaw) {
+      const saved = JSON.parse(savedRaw);
+      if (saved.orderKind && saved.sku) {
+        portalState.orderKind = saved.orderKind;
+        portalState.selectedSku = saved.sku;
+        portalState.comboVoiceId = saved.voicePlanId || "";
+        portalState.comboPromptId = saved.promptPlanId || "";
+        if ($("inp-supporter-name") && saved.supporterName) $("inp-supporter-name").value = saved.supporterName;
+        if ($("inp-supporter-msg") && saved.supporterMsg) $("inp-supporter-msg").value = saved.supporterMsg;
+        if ($("chk-supporter-public") && typeof saved.isPublic === "boolean") $("chk-supporter-public").checked = saved.isPublic;
+        renderProductsSection();
+      }
+    }
+  } catch (_) {}
+
+  await finalizeSubscriptionApproval({
+    subscriptionId: subId,
+    supporterOrderId: supOid,
+    spec: computeCurrentCheckoutSpec(),
+  });
+
+  const cleanUrl = window.location.pathname + window.location.hash;
+  window.history.replaceState({}, document.title, cleanUrl);
 }
 
 $("tab-deposit").onclick = () => {
@@ -775,6 +1217,20 @@ $("tab-voice").onclick = () => {
   portalState.orderKind = "voice_direct";
   portalState.selectedSku = "";
   renderProductsSection();
+};
+
+$("btn-paymode-sub").onclick = async () => {
+  if (portalState.paymentMode === "subscription") return;
+  portalState.paymentMode = "subscription";
+  renderProductsSection();
+  await setupPayPalButtons();
+};
+
+$("btn-paymode-once").onclick = async () => {
+  if (portalState.paymentMode === "one_time") return;
+  portalState.paymentMode = "one_time";
+  renderProductsSection();
+  await setupPayPalButtons();
 };
 
 $("sel-combo-voice").onchange = (e) => {
@@ -813,25 +1269,31 @@ $("btn-download-receipt").onclick = () => {
   if (!r) return;
   const lines = [
     "============================================================",
-    " 東方Project恋愛シミュレーター 先行サポーター引換コード控え",
+    " 東方Project恋愛シミュレーター PayPal購読・サポーター引換控え",
     "============================================================",
-    `発行日時       : ${r.completed_at}`,
-    `購入商品 (SKU) : ${r.title} [${r.sku}] (${fmtYen(r.price_yen)})`,
-    `付与特典       : ${formatGrantsShort(r.grants)}`,
-    `PayPal注文ID   : ${r.paypal_order_id}`,
-    `引換コード     : ${r.voucher_code}`,
+    `発行日時         : ${r.completed_at}`,
+    `お支払い区分     : ${r.payment_mode === "subscription" ? "PayPal定期購読 (サブスクリプション)" : "1回のみ単発決済"}`,
+    `購入プラン (SKU) : ${r.title} [${r.sku}] (${fmtYen(r.price_yen)})`,
+    ...(r.plan_id ? [`PayPalプランID   : ${r.plan_id}`] : []),
+    ...(r.paypal_subscription_id ? [`PayPal購読ID     : ${r.paypal_subscription_id}`] : [`PayPal注文ID     : ${r.paypal_order_id}`]),
+    `付与特典         : ${formatGrantsShort(r.grants)}`,
+    `引換コード       : ${r.voucher_code}`,
     "------------------------------------------------------------",
     "【使い方】",
     "1. ゲームクライアントを起動し「認証開始（サーバー連携）」を実行します。",
     "2. 「AIの導入方法とボイス設定」画面の「🎁 先行サポーター引換コード」欄に",
-    "   上記コードを入力して「コードを反映」を押すと即時反映されます。",
+    "   上記の引換コードを入力して「コードを反映」を押すと即時反映されます。",
+    ...(r.paypal_subscription_id ? [
+      "3. 次回以降の月次・年次自動更新時は、上記の PayPal購読ID (" + r.paypal_subscription_id + ")",
+      "   を同じ欄に入力するだけで更新サイクル分が自動加算されます。",
+    ] : []),
     "============================================================",
   ];
   const blob = new Blob([lines.join("\n")], { type: "text/plain;charset=utf-8" });
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
   a.href = url;
-  a.download = `TouhouRenai_Voucher_${r.paypal_order_id || "receipt"}.txt`;
+  a.download = `TouhouRenai_Sub_${r.paypal_subscription_id || r.paypal_order_id || "receipt"}.txt`;
   a.click();
   setTimeout(() => URL.revokeObjectURL(url), 1500);
 };
@@ -844,4 +1306,5 @@ $("btn-download-receipt").onclick = () => {
   await loadCampaignData();
   renderCampaignUI();
   await setupPayPalButtons();
+  await checkSubscriptionReturnRedirect();
 })();

@@ -47,6 +47,7 @@
   },
   "ops_fund_collected_yen": 0,
   "supporters_count": 0,
+  "active_subscriptions_count": 0,
   "buckets": [
     {
       "id": "aquestalk_dev_init",
@@ -73,7 +74,7 @@
     {
       "id": "gemini_and_server_ops",
       "label": "③ Gemini API 対話・背景生成 ＆ 自宅サーバー運転実費プール（変動費）",
-      "description": "プロンプト購入（10p:¥100〜10,000p:¥5,000）およびデポジット残高として預かり、Gemini 2.5 Flash 対話生成・AI背景生成（1枚¥100）・サーバー電力実費に充当される原資累計です。",
+      "description": "定期購読・都度デポジットチャージ残高として預かり、Gemini 2.5 Flash 対話生成・AI背景生成（1枚¥100）・サーバー電力実費に充当される原資累計です。",
       "target_yen": 0,
       "collected_yen": 0,
       "remaining_yen": 0,
@@ -92,7 +93,13 @@
       "recommended_combo": {
         "voice_plan_id": "vt_100",
         "prompt_plan_id": "p20"
-      }
+      },
+      "plan_id": "P-3K7340057U821512BNMEXFHI",
+      "plan_name": "デポジット 500円 月額定期チャージ購読プラン",
+      "interval_unit": "MONTH",
+      "interval_count": 1,
+      "cycle_label": "月額 ¥500（毎月自動チャージ）",
+      "subscribe_url": "https://www.paypal.com/webapps/billing/plans/subscribe?plan_id=P-3K7340057U821512BNMEXFHI"
     },
     {
       "sku": "THRENAI-DEPOSIT-1000",
@@ -103,7 +110,13 @@
       "recommended_combo": {
         "voice_plan_id": "vp_30d",
         "prompt_plan_id": "p50"
-      }
+      },
+      "plan_id": "P-4572364856349374GNMEXFHI",
+      "plan_name": "デポジット 1,000円 月額定期チャージ購読プラン",
+      "interval_unit": "MONTH",
+      "interval_count": 1,
+      "cycle_label": "月額 ¥1,000（毎月自動チャージ）",
+      "subscribe_url": "https://www.paypal.com/webapps/billing/plans/subscribe?plan_id=P-4572364856349374GNMEXFHI"
     },
     {
       "sku": "THRENAI-DEPOSIT-2000",
@@ -115,7 +128,13 @@
       "recommended_combo": {
         "voice_plan_id": "vp_30d",
         "prompt_plan_id": "p500"
-      }
+      },
+      "plan_id": "P-0TJ29133HP151935SNMEXFHQ",
+      "plan_name": "デポジット 2,000円 月額定期チャージ購読プラン",
+      "interval_unit": "MONTH",
+      "interval_count": 1,
+      "cycle_label": "月額 ¥2,000（毎月自動チャージ）",
+      "subscribe_url": "https://www.paypal.com/webapps/billing/plans/subscribe?plan_id=P-0TJ29133HP151935SNMEXFHQ"
     },
     {
       "sku": "THRENAI-DEPOSIT-3000",
@@ -126,7 +145,13 @@
       "recommended_combo": {
         "voice_plan_id": "vp_365d",
         "prompt_plan_id": "p500"
-      }
+      },
+      "plan_id": "P-6EB94254RV6305619NMEXFHY",
+      "plan_name": "デポジット 3,000円 月額定期チャージ購読プラン",
+      "interval_unit": "MONTH",
+      "interval_count": 1,
+      "cycle_label": "月額 ¥3,000（毎月自動チャージ）",
+      "subscribe_url": "https://www.paypal.com/webapps/billing/plans/subscribe?plan_id=P-6EB94254RV6305619NMEXFHY"
     },
     {
       "sku": "THRENAI-DEPOSIT-5000",
@@ -137,7 +162,13 @@
       "recommended_combo": {
         "voice_plan_id": "vp_365d",
         "prompt_plan_id": "p2000"
-      }
+      },
+      "plan_id": "P-0A35143003648561PNMEXFHY",
+      "plan_name": "デポジット 5,000円 月額定期チャージ購読プラン",
+      "interval_unit": "MONTH",
+      "interval_count": 1,
+      "cycle_label": "月額 ¥5,000（毎月自動チャージ）",
+      "subscribe_url": "https://www.paypal.com/webapps/billing/plans/subscribe?plan_id=P-0A35143003648561PNMEXFHY"
     },
     {
       "sku": "THRENAI-DEPOSIT-10000",
@@ -148,7 +179,13 @@
       "recommended_combo": {
         "voice_plan_id": "vp_365d",
         "prompt_plan_id": "p10000"
-      }
+      },
+      "plan_id": "P-5RU29057E27393244NMEXFIA",
+      "plan_name": "デポジット 10,000円 月額定期チャージ購読プラン",
+      "interval_unit": "MONTH",
+      "interval_count": 1,
+      "cycle_label": "月額 ¥10,000（毎月自動チャージ）",
+      "subscribe_url": "https://www.paypal.com/webapps/billing/plans/subscribe?plan_id=P-5RU29057E27393244NMEXFIA"
     }
   ],
   "voice_products": [
@@ -159,7 +196,13 @@
       "price_yen": 100,
       "days": 0,
       "credits": 100,
-      "desc": "使った分だけ1枠消費・有効期限なし（APIキー指定派のお試しにも最適）"
+      "desc": "使った分だけ1枠消費・有効期限なし（APIキー指定派のお試しにも最適）",
+      "plan_id": "P-5DL85522V0834500GNMEXFIQ",
+      "plan_name": "AquesTalk1 ボイス100セリフ枠 月額定期補充プラン",
+      "interval_unit": "MONTH",
+      "interval_count": 1,
+      "cycle_label": "月額 ¥100（毎月100枠補充）",
+      "subscribe_url": "https://www.paypal.com/webapps/billing/plans/subscribe?plan_id=P-5DL85522V0834500GNMEXFIQ"
     },
     {
       "sku": "THRENAI-VOICE-PASS-30D",
@@ -169,7 +212,13 @@
       "days": 30,
       "credits": 0,
       "recommended": true,
-      "desc": "30日間セリフ回数無制限でフルボイス再生（利益ゼロ上限ストッパー連動）"
+      "desc": "30日間セリフ回数無制限でフルボイス再生（利益ゼロ上限ストッパー連動）",
+      "plan_id": "P-9Y159968W24733238NMEXFII",
+      "plan_name": "AquesTalk1 フルボイスパス 月額購読プラン",
+      "interval_unit": "MONTH",
+      "interval_count": 1,
+      "cycle_label": "月額 ¥200（1ヶ月毎自動更新）",
+      "subscribe_url": "https://www.paypal.com/webapps/billing/plans/subscribe?plan_id=P-9Y159968W24733238NMEXFII"
     },
     {
       "sku": "THRENAI-VOICE-TICKET-300",
@@ -178,7 +227,13 @@
       "price_yen": 250,
       "days": 0,
       "credits": 300,
-      "desc": "まとめ買いでお得な従量300セリフ再生枠・有効期限なし"
+      "desc": "まとめ買いでお得な従量300セリフ再生枠・有効期限なし",
+      "plan_id": "P-65X18348C55732512NMEXFIQ",
+      "plan_name": "AquesTalk1 ボイス300セリフ枠 月額定期補充プラン",
+      "interval_unit": "MONTH",
+      "interval_count": 1,
+      "cycle_label": "月額 ¥250（毎月300枠補充）",
+      "subscribe_url": "https://www.paypal.com/webapps/billing/plans/subscribe?plan_id=P-65X18348C55732512NMEXFIQ"
     },
     {
       "sku": "THRENAI-VOICE-PASS-365D",
@@ -187,7 +242,13 @@
       "price_yen": 1200,
       "days": 365,
       "credits": 0,
-      "desc": "365日間回数無制限（年間サーバーライセンス維持費の約90分の1を分担）"
+      "desc": "365日間回数無制限（年間サーバーライセンス維持費の約90分の1を分担）",
+      "plan_id": "P-0TL52354AM9797635NMEXFII",
+      "plan_name": "AquesTalk1 フルボイスパス 年額購読プラン",
+      "interval_unit": "YEAR",
+      "interval_count": 1,
+      "cycle_label": "年額 ¥1,200（1年毎自動更新）",
+      "subscribe_url": "https://www.paypal.com/webapps/billing/plans/subscribe?plan_id=P-0TL52354AM9797635NMEXFII"
     }
   ],
   "prompt_plans": [
@@ -292,10 +353,11 @@
     "app_id": "APP-8T9206335D6788228",
     "mode": "live",
     "js_client_id": "BAABOchPXFZ_hmmE7bqLSpE6fBC0pzsHv9Qndt8hSS-4L5F25woNtP_9tGlTbJaujv7cJ-hPp8eqEevXZk",
-    "rest_ready": false,
+    "rest_ready": true,
+    "subscriptions_enabled": true,
     "currency": "JPY",
     "fee_rate": 0.036,
     "fee_fixed_yen": 40
   },
-  "updated_at": "2026-11-25T13:19:00+00:00"
+  "updated_at": "2026-11-27T12:18:47+00:00"
 }

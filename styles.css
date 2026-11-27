@@ -823,3 +823,119 @@ a:hover {
 .data-table th.num {
   text-align: right;
 }
+
+/* Subscription Mode Switch & Card Subscribe Actions */
+.billing-type-switch {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+  background: rgba(11, 16, 32, 0.92);
+  border: 1px solid var(--border-subtle);
+  border-radius: 12px;
+  padding: 5px;
+  margin-bottom: 14px;
+}
+
+.btype-btn {
+  background: transparent;
+  color: var(--text-sub);
+  border: none;
+  border-radius: 8px;
+  padding: 9px 10px;
+  font-size: 0.82rem;
+  font-weight: 800;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.btype-btn.active {
+  background: linear-gradient(135deg, #0284c7, #db2777);
+  color: #fff;
+  box-shadow: 0 4px 12px rgba(2, 132, 199, 0.35);
+}
+
+.tier-actions-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid rgba(148, 163, 184, 0.14);
+}
+
+.tier-action-btns {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.card-sub-btn {
+  background: linear-gradient(135deg, var(--crimson), #db2777);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 6px 13px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: opacity 0.15s ease, transform 0.12s ease;
+}
+
+.card-sub-btn:hover {
+  opacity: 0.92;
+  transform: translateY(-1px);
+}
+
+.card-sub-link {
+  display: inline-flex;
+  align-items: center;
+  background: rgba(56, 189, 248, 0.14);
+  border: 1px solid rgba(56, 189, 248, 0.42);
+  color: #bae6fd !important;
+  border-radius: 8px;
+  padding: 5px 11px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-decoration: none !important;
+}
+
+.card-sub-link:hover {
+  background: rgba(56, 189, 248, 0.25);
+}
+
+.direct-sub-wrap {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px dashed rgba(148, 163, 184, 0.22);
+}
+
+.btn-subscribe-direct {
+  width: 100%;
+  padding: 10px 14px;
+  font-size: 0.84rem;
+  background: rgba(14, 116, 144, 0.35);
+  border: 1px solid rgba(56, 189, 248, 0.5);
+  color: #e0f2fe !important;
+}
+
+.btn-subscribe-direct:hover {
+  background: rgba(14, 116, 144, 0.52);
+}
+
+.direct-sub-note {
+  margin-top: 6px;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  line-height: 1.5;
+}
+
+.sub-id-note {
+  font-size: 0.78rem;
+  color: #bae6fd;
+  text-align: center;
+  margin-bottom: 10px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
